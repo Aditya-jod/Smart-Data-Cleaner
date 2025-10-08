@@ -4,7 +4,7 @@
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 Data preprocessing is often the most time-consuming phase of any data science workflow. This application automates the essential steps of data cleaning, allowing users to focus on analysis and modeling rather than tedious cleanup tasks.
 
@@ -15,7 +15,7 @@ With just a CSV upload, the app:
 -   Offers rich visualizations to understand the dataset's state before and after cleaning.
 -   Allows instant download of the cleaned dataset.
 
-## ✨ Key Features
+## Key Features
 
 -   **Interactive Dashboard**: A clean, tab-based interface built with Streamlit.
 -   **Data Summary**: Get instant metrics on rows, columns, duplicates, and missing values.
@@ -29,7 +29,7 @@ With just a CSV upload, the app:
     -   Count plots for categorical columns.
 -   **Data Download**: Download the cleaned DataFrame as a new CSV file.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 -   **Python**: Core programming language.
 -   **Streamlit**: For building the interactive web application.
@@ -37,7 +37,7 @@ With just a CSV upload, the app:
 -   **NumPy**: For numerical operations, especially in outlier handling.
 -   **Matplotlib & Seaborn**: For generating data visualizations.
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```
 smart_data_cleaner/
@@ -55,7 +55,7 @@ smart_data_cleaner/
 └── README.md               # Project overview and guide
 ```
 
-## 🚀 Setup and Usage
+## Setup and Usage
 
 Follow these steps to run the application locally:
 

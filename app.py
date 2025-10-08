@@ -22,6 +22,7 @@ if 'file_uploader_key' not in st.session_state:
 # --- Helper Function ---
 @st.cache_data
 def convert_df_to_csv(df):
+    # Convert DataFrame to CSV bytes
     return df.to_csv(index=False).encode('utf-8')
 
 # --- Sidebar ---
@@ -39,50 +40,66 @@ with st.sidebar:
                 st.session_state.file_uploader_key += 1
                 st.rerun()
 
-        # 1. Handle Duplicates
-        if st.button("Remove Duplicates"):
-            with st.spinner("Handling duplicates..."):
-                cleaner = DataCleaner(st.session_state.cleaned_df)
-                rows_removed = cleaner.remove_duplicates()
+        # 1. Convert Data Types
+        if st.button("Optimize Data Types"):
+            with st.spinner("Optimizing types..."):
+                cleaner = DataCleaner(st.session_state.cleaned_df) 
+                cleaner.convert_data_types()
                 st.session_state.cleaned_df = cleaner.get_cleaned_data()
+                st.toast("Data types optimized.")
+                st.rerun()
+
+        # 2. Handle Duplicates
+        if st.button("Remove Duplicates"):
+            with st.spinner("Removing duplicates..."):
+                rows_before = len(st.session_state.cleaned_df)
+                cleaner = DataCleaner(st.session_state.cleaned_df)
+                cleaner.remove_duplicates()
+                st.session_state.cleaned_df = cleaner.get_cleaned_data()
+                rows_after = len(st.session_state.cleaned_df)
+                rows_removed = rows_before - rows_after
                 st.toast(f"Removed {rows_removed} duplicate rows.")
                 st.rerun()
 
-        # 2. Handle Missing Values
+        # 3. Handle Missing Values
         with st.expander("Handle Missing Values", expanded=True):
             df = st.session_state.cleaned_df
             missing_cols = df.columns[df.isnull().any()].tolist()
             if not missing_cols:
                 st.write("No missing values found.")
             else:
+                # Select missing value handling strategy and columns
                 strategy = st.selectbox("Strategy", ["Drop Rows", "Fill with Mean", "Fill with Median", "Fill with Mode"], key="mv_strategy")
                 selected_cols = st.multiselect("Select columns", missing_cols, default=missing_cols, key="mv_cols")
                 
                 if st.button("Apply Missing Value Strategy"):
-                    cleaner = DataCleaner(st.session_state.cleaned_df)
-                    strategy_map = {
-                        "Drop Rows": "drop", "Fill with Mean": "mean",
-                        "Fill with Median": "median", "Fill with Mode": "mode"
-                    }
-                    cleaner.handle_missing_values(strategy=strategy_map[strategy], columns=selected_cols)
-                    st.session_state.cleaned_df = cleaner.get_cleaned_data()
-                    st.toast("Handled missing values.")
-                    st.rerun()
+                    with st.spinner("Handling missing values..."):
+                        cleaner = DataCleaner(st.session_state.cleaned_df)
+                        strategy_map = {
+                            "Drop Rows": "drop", "Fill with Mean": "mean",
+                            "Fill with Median": "median", "Fill with Mode": "mode"
+                        }
+                        cleaner.handle_missing_values(strategy=strategy_map[strategy], columns=selected_cols)
+                        st.session_state.cleaned_df = cleaner.get_cleaned_data()
+                        st.toast("Handled missing values.")
+                        st.rerun()
 
-        # 3. Handle Outliers
+        # 4. Handle Outliers
         with st.expander("Handle Outliers (IQR Method)", expanded=True):
             df = st.session_state.cleaned_df
             numeric_cols = df.select_dtypes(include='number').columns.tolist()
             if not numeric_cols:
                 st.write("No numerical columns for outlier detection.")
             else:
+                # Select column for outlier handling
                 outlier_col = st.selectbox("Select column", numeric_cols, key="out_col")
                 if st.button("Cap Outliers"):
-                    cleaner = DataCleaner(st.session_state.cleaned_df)
-                    cleaner.handle_outliers(column=outlier_col, strategy='iqr')
-                    st.session_state.cleaned_df = cleaner.get_cleaned_data()
-                    st.toast(f"Capped outliers in '{outlier_col}'.")
-                    st.rerun()
+                    with st.spinner("Capping outliers..."):
+                        cleaner = DataCleaner(st.session_state.cleaned_df)
+                        cleaner.handle_outliers(column=outlier_col, strategy='iqr')
+                        st.session_state.cleaned_df = cleaner.get_cleaned_data()
+                        st.toast(f"Capped outliers in '{outlier_col}'.")
+                        st.rerun()
 
         # --- Download Button ---
         st.markdown("<h2 style='color: #0072B5;'>Download</h2>", unsafe_allow_html=True)
@@ -99,16 +116,18 @@ st.markdown("<h1 style='color: #0072B5;'>🧹 Smart Data Cleaner</h1>", unsafe_a
 st.write("Upload your CSV, analyze its quality, clean it interactively, and download the result.")
 
 if st.session_state.original_df is None:
+    # File uploader for CSV
     uploaded_file = st.file_uploader(
         "Choose a CSV file", 
         type="csv", 
         key=f"file_uploader_{st.session_state.file_uploader_key}"
     )
     if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        st.session_state.original_df = df
-        st.session_state.cleaned_df = df.copy()
-        st.rerun()
+        with st.spinner("Loading data..."):
+            df = pd.read_csv(uploaded_file)
+            st.session_state.original_df = df
+            st.session_state.cleaned_df = df.copy()
+            st.rerun()
 else:
     # Main dashboard with tabs
     tab1, tab2, tab3 = st.tabs(["📊 Data Summary", "📈 Visualizations", "✨ Cleaned Data"])
@@ -117,6 +136,7 @@ else:
         st.markdown("<h2 style='color: #0072B5;'>Original Data Summary</h2>", unsafe_allow_html=True)
         summary = DataCleaner(st.session_state.original_df).get_summary()
         
+        # Show metrics for original data
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Rows", st.session_state.original_df.shape[0])
         col2.metric("Total Columns", st.session_state.original_df.shape[1])
@@ -133,7 +153,6 @@ else:
             "Data Type": df.dtypes
         }).reset_index().rename(columns={'index': 'Column Name'})
         
-        # Convert dtype objects to strings for Arrow compatibility
         info_df['Data Type'] = info_df['Data Type'].astype(str)
         
         st.dataframe(
@@ -150,14 +169,15 @@ else:
         st.markdown("<h2 style='color: #0072B5;'>Data Visualizations (on Cleaned Data)</h2>", unsafe_allow_html=True)
         df = st.session_state.cleaned_df
         
-        st.markdown("<h3 style='color: #0072B5;'>Missing Values Heatmap</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color: #0072B5;'>Missing Values</h3>", unsafe_allow_html=True)
         fig_missing = viz.plot_missing_values(df)
         if fig_missing:
             st.pyplot(fig_missing)
         else:
-            st.write("No data to display.")
+            st.success("✅ No missing values found!")
 
         st.markdown("<h3 style='color: #0072B5;'>Column-wise Plots</h3>", unsafe_allow_html=True)
+        # Select column for visualization
         plot_col = st.selectbox("Select a column to visualize", df.columns)
         
         if plot_col:
@@ -182,6 +202,7 @@ else:
         cleaned_df = st.session_state.cleaned_df
         summary_cleaned = DataCleaner(cleaned_df).get_summary()
         
+        # Show metrics for cleaned data
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Rows", cleaned_df.shape[0])
         col2.metric("Total Columns", cleaned_df.shape[1])
@@ -194,7 +215,6 @@ else:
             "Data Type": cleaned_df.dtypes
         }).reset_index().rename(columns={'index': 'Column Name'})
 
-        # Convert dtype objects to strings for Arrow compatibility
         info_df_cleaned['Data Type'] = info_df_cleaned['Data Type'].astype(str)
 
         st.dataframe(
@@ -204,5 +224,5 @@ else:
                 align='left',
                 vmax=len(cleaned_df) if len(cleaned_df) > 0 else 1
             ),
-            use_container_width=True 
+            use_container_width=True
         )

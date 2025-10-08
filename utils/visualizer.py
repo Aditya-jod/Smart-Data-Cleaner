@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-# Define theme colors for consistency
+# Theme colors for all plots
 PRIMARY_COLOR = "#6c63ff"
 TEXT_COLOR = "#fafafa"
-BACKGROUND_COLOR = "none" # Use 'none' for transparency
+BACKGROUND_COLOR = "none" # Transparent background for plots
 
 def style_plot(fig, ax, title):
-    """Applies a consistent dark theme style to a plot."""
+    """Apply dark theme and consistent style to a plot."""
     fig.patch.set_facecolor(BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
     
@@ -23,18 +23,30 @@ def style_plot(fig, ax, title):
     plt.tight_layout()
 
 def plot_missing_values(df: pd.DataFrame):
-    """Generates a heatmap to visualize missing values with a dark theme."""
+    """
+    Show a bar chart of missing value counts for each column.
+    Only columns with missing data are shown.
+    """
     if not isinstance(df, pd.DataFrame) or df.empty:
+        return None
+    
+    missing_counts = df.isnull().sum()
+    missing_counts = missing_counts[missing_counts > 0] # Only columns with missing values
+
+    if missing_counts.empty:
+        # No missing values found
         return None
         
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.heatmap(df.isnull(), cbar=False, cmap='viridis', yticklabels=False, ax=ax)
+    missing_counts.sort_values().plot(kind='barh', ax=ax, color=PRIMARY_COLOR)
+    ax.set_xlabel("Number of Missing Values")
+    ax.set_title("Missing Value Counts per Column")
     
-    style_plot(fig, ax, 'Missing Values Heatmap')
+    style_plot(fig, ax, 'Missing Value Counts per Column')
     return fig
 
 def plot_distribution(df: pd.DataFrame, column: str):
-    """Generates a themed distribution plot for a numerical column."""
+    """Show histogram and KDE for a numeric column."""
     if not isinstance(df, pd.DataFrame) or column not in df.columns or df[column].dropna().empty:
         return None
         
@@ -47,7 +59,7 @@ def plot_distribution(df: pd.DataFrame, column: str):
     return None
 
 def plot_boxplot(df: pd.DataFrame, column: str):
-    """Generates a themed box plot to visualize outliers."""
+    """Show box plot for a numeric column to highlight outliers."""
     if not isinstance(df, pd.DataFrame) or column not in df.columns or df[column].dropna().empty:
         return None
         
@@ -59,16 +71,31 @@ def plot_boxplot(df: pd.DataFrame, column: str):
         return fig
     return None
 
-def plot_countplot(df: pd.DataFrame, column: str):
-    """Generates a themed count plot for a categorical column."""
+def plot_countplot(df: pd.DataFrame, column: str, top_n: int = 15):
+    """
+    Show bar chart for most common categories in a column.
+    If there are many categories, group less common ones as "Other".
+    """
     col_data = df[column].dropna()
     if not isinstance(df, pd.DataFrame) or column not in df.columns or col_data.empty:
         return None
 
     if pd.api.types.is_object_dtype(col_data) or pd.api.types.is_categorical_dtype(col_data):
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.countplot(y=col_data, order=col_data.value_counts().index, ax=ax, color=PRIMARY_COLOR)
+        fig, ax = plt.subplots(figsize=(10, 8))
         
-        style_plot(fig, ax, f'Count Plot of {column}')
+        value_counts = col_data.value_counts()
+        
+        # Only show top_n categories, group the rest as "Other"
+        if len(value_counts) > top_n:
+            top_counts = value_counts.nlargest(top_n)
+            other_count = value_counts.nsmallest(len(value_counts) - top_n).sum()
+            top_counts['Other'] = other_count
+            counts_to_plot = top_counts
+        else:
+            counts_to_plot = value_counts
+
+        sns.barplot(y=counts_to_plot.index, x=counts_to_plot.values, ax=ax, color=PRIMARY_COLOR, orient='h')
+        
+        style_plot(fig, ax, f'Top {min(top_n, len(value_counts))} Categories in {column}')
         return fig
     return None
