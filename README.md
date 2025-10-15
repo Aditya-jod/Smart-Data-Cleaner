@@ -1,95 +1,108 @@
 # 🧹 Smart Data Cleaner
 
-**An interactive Streamlit web app to automatically analyze, clean, and visualize your CSV datasets.**
+**Interactive Streamlit app to analyze, clean, and visualize CSV datasets.**
 
 ---
 
 ## Project Overview
 
-Data preprocessing is often the most time-consuming phase of any data science workflow. This application automates the essential steps of data cleaning, allowing users to focus on analysis and modeling rather than tedious cleanup tasks.
+Automates common data cleaning tasks so you can focus on analysis and modeling. Upload a CSV and:
+- Generate a data quality summary.
+- Detect and handle missing values, duplicates, and outliers.
+- Visualize distributions, boxplots, countplots, and missing-value summaries.
+- Download the cleaned CSV.
 
-With just a CSV upload, the app:
--   Generates a comprehensive data quality report.
--   Intelligently detects and quantifies missing values, duplicates, and outliers.
--   Provides dynamic and interactive controls to clean the data.
--   Offers rich visualizations to understand the dataset's state before and after cleaning.
--   Allows instant download of the cleaned dataset.
+## What's new in this version
 
-## Key Features
+- Robust input validation and defensive error handling across the codebase.
+- Centralized logging for easier debugging.
+- DataCleaner improvements:
+  - Safe missing-value strategies: drop / mean / median / mode.
+  - Outlier handling (IQR) with safe clipping for integer-like dtypes.
+  - Type conversion using pandas' convert_dtypes and safer numeric conversion.
+  - get_summary returns captured info, description, missing counts, duplicate count.
+- Visualizer improvements:
+  - Functions return Optional[matplotlib.figure.Figure].
+  - Input validation and safe styling; errors are logged and handled.
+  - Consistent dark theme and centralized color constants.
+- App improvements:
+  - Defensive Streamlit UI (explicit None checks for DataFrames).
+  - Safe CSV download, spinners, and better error messages.
+  - Replaced deprecated Streamlit param use_container_width -> width='stretch'.
+- Dev tooling (recommended and scaffolded):
+  - requirements-dev.txt (pytest, flake8, black, isort, pre-commit, mypy).
+  - CI workflow (GitHub Actions) to run tests and lint.
+  - Pre-commit hooks (black/isort/flake8) recommended.
 
--   **Interactive Dashboard**: A clean, tab-based interface built with Streamlit.
--   **Data Summary**: Get instant metrics on rows, columns, duplicates, and missing values.
--   **Duplicate Removal**: Remove duplicate rows with a single click.
--   **Missing Value Imputation**: Handle missing data using various strategies (drop, mean, median, mode).
--   **Outlier Handling**: Detect and cap outliers using the IQR (Interquartile Range) method.
--   **Dynamic Visualizations**:
-    -   Missing value heatmaps.
-    -   Distribution plots for numerical columns.
-    -   Box plots to identify outliers.
-    -   Count plots for categorical columns.
--   **Data Download**: Download the cleaned DataFrame as a new CSV file.
-
-## Tech Stack
-
--   **Python**: Core programming language.
--   **Streamlit**: For building the interactive web application.
--   **Pandas**: For data manipulation and analysis.
--   **NumPy**: For numerical operations, especially in outlier handling.
--   **Matplotlib & Seaborn**: For generating data visualizations.
-
-## Folder Structure
+## Folder structure
 
 ```
 smart_data_cleaner/
-│
 ├── .streamlit/
-│   └── config.toml         # App theme configuration
-│
-├── app.py                  # Main Streamlit app
-│
+├── app.py
 ├── utils/
-│   ├── data_cleaner.py     # All cleaning functions
-│   └── visualizer.py       # Data visualization helper functions
-│
-├── requirements.txt        # Dependencies list
-└── README.md               # Project overview and guide
+│   ├── data_cleaner.py
+│   └── visualizer.py
+├── requirements.txt
+├── requirements-dev.txt   # dev/test tools (recommended)
+├── tests/                 # suggested: pytest tests
+└── README.md
 ```
 
-## Setup and Usage
+## Install & run (local)
 
-Follow these steps to run the application locally:
-
-**1. Clone the Repository**
-```bash
-git clone https://github.com/your-username/smart-data-cleaner.git
-cd smart-data-cleaner
+1. Create and activate venv (Windows)
+```powershell
+python -m venv venv
+.\venv\Scripts\activate
 ```
 
-**2. Create and Activate a Virtual Environment**
-
--   **Windows**:
-    ```bash
-    python -m venv venv
-    .\venv\Scripts\activate
-    ```
--   **macOS / Linux**:
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-**3. Install Dependencies**
-```bash
+2. Install runtime dependencies
+```powershell
 pip install -r requirements.txt
 ```
 
-**4. Run the Streamlit App**
-```bash
-streamlit run app.py
+3. (Optional) Install dev deps for tests & linting
+```powershell
+pip install -r requirements-dev.txt
 ```
 
-A new tab should open in your web browser at `http://localhost:8501`.
+4. Run the app
+```powershell
+streamlit run app.py
+```
+Open: http://localhost:8501
+
+## Tests & CI
+
+- Run tests locally:
+```powershell
+pytest -q
+```
+
+- CI (GitHub Actions): add `.github/workflows/ci.yml` to run pytest and flake8 on push / PR.
+
+## Code style & pre-commit
+
+Recommended pre-commit config (black, isort, flake8). Install locally:
+```powershell
+pre-commit install
+pre-commit run --all-files
+```
+
+## Notes & caveats
+
+- DataFrame truth checks were replaced with explicit None/empty checks to avoid pandas' ambiguous truth-value errors.
+- Outlier capping uses integer-safe bounds for pandas nullable integer dtypes (Int64). If you prefer fractional caps, convert the column to float before capping (can be added).
+- Some pandas styling operations can produce warnings when columns are constant or NaN-only; the app now falls back to plain rendering when styling fails.
+- If you encounter warnings about future pandas behavior (e.g., pd.to_numeric errors parameter), update utils/data_cleaner.convert_data_types accordingly.
+
+## Contributing
+
+- Open an issue or PR.
+- Run tests and linters locally before opening a PR.
+- Follow the code style (black/isort/flake8).
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+MIT
