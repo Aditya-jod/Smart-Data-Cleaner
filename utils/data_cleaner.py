@@ -166,8 +166,18 @@ class DataCleaner:
                     Q3,
                     IQR,
                 )
-                # Use clip to cap outliers; preserve NaNs
-                self.df[column] = self.df[column].clip(lower=lower_bound, upper=upper_bound)
+
+                # If the column has an integer-like dtype (including pandas nullable Int64),
+                # round bounds to integers so assignment doesn't fail (e.g. cannot set 2000.5 on Int64)
+                if pd.api.types.is_integer_dtype(self.df[column].dtype) or str(self.df[column].dtype).startswith("Int"):
+                    # use floor/ceil to be conservative
+                    int_lower = int(np.floor(lower_bound))
+                    int_upper = int(np.ceil(upper_bound))
+                    logger.debug("Integer column detected; using integer bounds [%s, %s] for clipping", int_lower, int_upper)
+                    self.df[column] = self.df[column].clip(lower=int_lower, upper=int_upper)
+                else:
+                    # float columns: clip with float bounds
+                    self.df[column] = self.df[column].clip(lower=lower_bound, upper=upper_bound)
         except Exception as exc:
             logger.exception("Failed to handle outliers for column %s: %s", column, exc)
 
@@ -191,9 +201,16 @@ class DataCleaner:
                 continue
             try:
                 if self.df[col].dtype == "object":
-                    # Try numeric conversion first (safe)
-                    converted = pd.to_numeric(self.df[col], errors="ignore")
-                    self.df[col] = converted
+                    # Try numeric conversion first (safe). Use errors='raise' and catch ValueError,
+                    # because errors='ignore' is deprecated and will raise in future pandas versions.
+                    try:
+                        converted = pd.to_numeric(self.df[col], errors="raise")
+                        # If conversion succeeds, assign converted series (preserves NaNs)
+                        self.df[col] = converted
+                        logger.debug("Column %s converted to numeric dtype", col)
+                    except (ValueError, TypeError):
+                        # not fully numeric — leave as-is (convert_dtypes below may still improve)
+                        logger.debug("Column %s could not be converted to numeric; leaving as object", col)
             except Exception as exc:
                 logger.exception("Failed converting column %s to numeric: %s", col, exc)
 

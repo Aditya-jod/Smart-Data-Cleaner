@@ -218,7 +218,7 @@ else:
                 align='left',
                 vmax=len(df) if len(df) > 0 else 1
             ),
-            use_container_width=True
+            width='stretch'
         )
 
     with tab2:
@@ -296,6 +296,5 @@ else:
                 align='left',
                 vmax=len(cleaned_df) if len(cleaned_df) > 0 else 1
             ),
-            use_container_width=True
+            width='stretch'
         )
-        
