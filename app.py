@@ -211,15 +211,17 @@ else:
 
         info_df['Data Type'] = info_df['Data Type'].astype(str)
 
-        st.dataframe(
-            info_df.style.bar(
+        try:
+            styled = info_df.style.bar(
                 subset=['Non-Null Count'],
                 color='#6c63ff',
                 align='left',
                 vmax=len(df) if len(df) > 0 else 1
-            ),
-            width='stretch'
-        )
+            )
+            st.dataframe(styled, width='stretch')
+        except Exception:
+            logger.exception("Styling info_df failed; rendering without style")
+            st.dataframe(info_df, width='stretch')
 
     with tab2:
         st.markdown("<h2 style='color: #0072B5;'>Data Visualizations (on Cleaned Data)</h2>", unsafe_allow_html=True)
@@ -289,12 +291,15 @@ else:
 
         info_df_cleaned['Data Type'] = info_df_cleaned['Data Type'].astype(str)
 
-        st.dataframe(
-            info_df_cleaned.style.bar(
+        try:
+            styled_cleaned = info_df_cleaned.style.bar(
                 subset=['Non-Null Count'],
                 color='#6c63ff',
                 align='left',
                 vmax=len(cleaned_df) if len(cleaned_df) > 0 else 1
-            ),
-            width='stretch'
-        )
+            )
+            st.dataframe(styled_cleaned, width='stretch')
+        except Exception:
+            logger.exception("Styling info_df_cleaned failed; rendering without style")
+            st.dataframe(info_df_cleaned, width='stretch')
+# --- End of File ---
