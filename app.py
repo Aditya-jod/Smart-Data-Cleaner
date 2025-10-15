@@ -193,7 +193,7 @@ else:
 
         # Show metrics for original data
         col1, col2, col3, col4 = st.columns(4)
-        original_df = st.session_state.original_df or pd.DataFrame()
+        original_df = st.session_state.original_df if st.session_state.original_df is not None else pd.DataFrame()
         col1.metric("Total Rows", int(original_df.shape[0]))
         col2.metric("Total Columns", int(original_df.shape[1]))
         col3.metric("Duplicate Rows", int(summary.get('duplicate_count', 0)))
@@ -223,7 +223,7 @@ else:
 
     with tab2:
         st.markdown("<h2 style='color: #0072B5;'>Data Visualizations (on Cleaned Data)</h2>", unsafe_allow_html=True)
-        df = st.session_state.cleaned_df or pd.DataFrame()
+        df = st.session_state.cleaned_df if st.session_state.cleaned_df is not None else pd.DataFrame()
 
         st.markdown("<h3 style='color: #0072B5;'>Missing Values</h3>", unsafe_allow_html=True)
         try:
@@ -264,7 +264,7 @@ else:
 
     with tab3:
         st.markdown("<h2 style='color: #0072B5;'>Cleaned Data Preview</h2>", unsafe_allow_html=True)
-        cleaned_df = st.session_state.cleaned_df or pd.DataFrame()
+        cleaned_df = st.session_state.cleaned_df if st.session_state.cleaned_df is not None else pd.DataFrame()
         st.dataframe(cleaned_df)
 
         st.markdown("<h3 style='color: #0072B5;'>Summary of Cleaned Data</h3>", unsafe_allow_html=True)
@@ -298,3 +298,4 @@ else:
             ),
             use_container_width=True
         )
+        
