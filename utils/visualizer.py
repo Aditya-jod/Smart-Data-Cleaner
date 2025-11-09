@@ -157,3 +157,5 @@ def plot_countplot(df: pd.DataFrame, column: str, top_n: int = 15) -> Optional[F
     except Exception as exc:
         logger.exception("plot_countplot failed for %s: %s", column, exc)
         return None
+
+# End of utils/visualizer.py
