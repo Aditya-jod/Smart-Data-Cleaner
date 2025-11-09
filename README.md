@@ -92,10 +92,10 @@ pre-commit run --all-files
 
 ## Notes & caveats
 
-- DataFrame truth checks were replaced with explicit None/empty checks to avoid pandas' ambiguous truth-value errors.
-- Outlier capping uses integer-safe bounds for pandas nullable integer dtypes (Int64). If you prefer fractional caps, convert the column to float before capping (can be added).
-- Some pandas styling operations can produce warnings when columns are constant or NaN-only; the app now falls back to plain rendering when styling fails.
-- If you encounter warnings about future pandas behavior (e.g., pd.to_numeric errors parameter), update utils/data_cleaner.convert_data_types accordingly.
+- Replaced ambiguous DataFrame truth checks with explicit None/empty checks.
+- Outlier capping uses integer-safe bounds for pandas nullable Int64; convert to float first for fractional caps.
+- Styling falls back to plain rendering if pandas styling warns/fails.
+- Update utils/data_cleaner.convert_data_types if pandas raises future warnings (e.g., pd.to_numeric errors).
 
 ## Contributing
 
