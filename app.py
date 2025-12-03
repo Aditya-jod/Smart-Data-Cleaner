@@ -159,25 +159,28 @@ with st.sidebar:
 
 # --- Main Panel ---
 st.markdown("<h1 style='color: #0072B5;'>🧹 Smart Data Cleaner</h1>", unsafe_allow_html=True)
-st.write("Upload your CSV, analyze its quality, clean it interactively, and download the result.")
+st.write("Upload your CSV or Excel file, analyze its quality, clean it interactively, and download the result.")
 
 if st.session_state.original_df is None:
-    # File uploader for CSV
+    # File uploader for CSV or Excel
     uploaded_file = st.file_uploader(
-        "Choose a CSV file",
-        type="csv",
+        "Choose a CSV or Excel file",
+        type=["csv", "xlsx"],
         key=f"file_uploader_{st.session_state.file_uploader_key}"
     )
     if uploaded_file is not None:
         with st.spinner("Loading data..."):
             try:
-                df = pd.read_csv(uploaded_file)
+                if uploaded_file.name.endswith('.csv'):
+                    df = pd.read_csv(uploaded_file)
+                else:
+                    df = pd.read_excel(uploaded_file)
                 st.session_state.original_df = df
                 st.session_state.cleaned_df = df.copy()
                 st.rerun()
             except Exception:
-                logger.exception("Failed to read uploaded CSV")
-                st.error("Failed to read CSV. Please ensure the file is a valid CSV.")
+                logger.exception("Failed to read uploaded file")
+                st.error("Failed to read file. Please ensure it is a valid CSV or Excel file.")
 else:
     # Main dashboard with tabs
     tab1, tab2, tab3 = st.tabs(["📊 Data Summary", "📈 Visualizations", "✨ Cleaned Data"])
