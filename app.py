@@ -175,6 +175,10 @@ if st.session_state.original_df is None:
                     df = pd.read_csv(uploaded_file)
                 else:
                     df = pd.read_excel(uploaded_file)
+                
+                # Remove unnamed columns
+                df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
                 st.session_state.original_df = df
                 st.session_state.cleaned_df = df.copy()
                 st.rerun()
@@ -221,10 +225,10 @@ else:
                 align='left',
                 vmax=len(df) if len(df) > 0 else 1
             )
-            st.dataframe(styled, width='stretch')
+            st.dataframe(styled, use_container_width=True)
         except Exception:
             logger.exception("Styling info_df failed; rendering without style")
-            st.dataframe(info_df, width='stretch')
+            st.dataframe(info_df, use_container_width=True)
 
     with tab2:
         st.markdown("<h2 style='color: #0072B5;'>Data Visualizations (on Cleaned Data)</h2>", unsafe_allow_html=True)
@@ -301,8 +305,8 @@ else:
                 align='left',
                 vmax=len(cleaned_df) if len(cleaned_df) > 0 else 1
             )
-            st.dataframe(styled_cleaned, width='stretch')
+            st.dataframe(styled_cleaned, use_container_width=True)
         except Exception:
             logger.exception("Styling info_df_cleaned failed; rendering without style")
-            st.dataframe(info_df_cleaned, width='stretch')
+            st.dataframe(info_df_cleaned, use_container_width=True)
 # --- End of File ---
