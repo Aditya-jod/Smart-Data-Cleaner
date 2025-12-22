@@ -24,8 +24,10 @@ if 'cleaned_df' not in st.session_state:
     st.session_state.cleaned_df = None
 if 'file_uploader_key' not in st.session_state:
     st.session_state.file_uploader_key = 0
+if 'operation_history' not in st.session_state:
+    st.session_state.operation_history = []  # List of (timestamp, operation_name, dataframe_snapshot)
 
-# --- Helper Function ---
+# --- Helper Functions ---
 def convert_df_to_csv(df: pd.DataFrame) -> bytes:
     # Convert DataFrame to CSV bytes safely
     if df is None:
@@ -38,22 +40,53 @@ def convert_df_to_csv(df: pd.DataFrame) -> bytes:
         logger.exception("Failed to convert DataFrame to CSV: %s", exc)
         return b""
 
+def save_to_history(operation_name: str):
+    """Save current state to operation history before applying changes."""
+    from datetime import datetime
+    if st.session_state.cleaned_df is not None:
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        # Keep last 10 operations to avoid memory issues
+        if len(st.session_state.operation_history) >= 10:
+            st.session_state.operation_history.pop(0)
+        st.session_state.operation_history.append(
+            (timestamp, operation_name, st.session_state.cleaned_df.copy())
+        )
+        logger.info("Saved to history: %s at %s", operation_name, timestamp)
+
 # --- Sidebar ---
 with st.sidebar:
     st.markdown("<h1 style='color: #0072B5;'>⚙️ Cleaning Controls</h1>", unsafe_allow_html=True)
 
     if st.session_state.original_df is None:
-        st.info("Upload a CSV file to begin cleaning.")
+        st.info("Upload a CSV or Excel file to begin cleaning.")
     else:
         # Ensure cleaned_df exists
         if st.session_state.cleaned_df is None:
             st.session_state.cleaned_df = st.session_state.original_df.copy()
+
+        # --- Undo Button ---
+        if len(st.session_state.operation_history) > 0:
+            st.markdown("### 🔄 History")
+            if st.button("⏪ Undo Last Operation"):
+                timestamp, operation_name, df_snapshot = st.session_state.operation_history.pop()
+                st.session_state.cleaned_df = df_snapshot
+                st.success(f"Undone: {operation_name} (from {timestamp})")
+                logger.info("Undone operation: %s", operation_name)
+                st.rerun()
+            
+            # Show operation history
+            with st.expander("📋 Operation History", expanded=False):
+                for timestamp, op_name, _ in reversed(st.session_state.operation_history):
+                    st.text(f"{timestamp} - {op_name}")
+        
+        st.markdown("---")
 
         # --- Reset Button ---
         if st.button("Reset and Upload New File"):
             with st.spinner("Resetting..."):
                 st.session_state.original_df = None
                 st.session_state.cleaned_df = None
+                st.session_state.operation_history = []
                 st.session_state.file_uploader_key += 1
                 st.rerun()
 
@@ -61,6 +94,7 @@ with st.sidebar:
         if st.button("Optimize Data Types"):
             with st.spinner("Optimizing types..."):
                 try:
+                    save_to_history("Optimize Data Types")
                     cleaner = DataCleaner(st.session_state.cleaned_df)
                     cleaner.convert_data_types()
                     st.session_state.cleaned_df = cleaner.get_cleaned_data()
@@ -74,6 +108,7 @@ with st.sidebar:
         if st.button("Remove Duplicates"):
             with st.spinner("Removing duplicates..."):
                 try:
+                    save_to_history("Remove Duplicates")
                     rows_before = len(st.session_state.cleaned_df)
                     cleaner = DataCleaner(st.session_state.cleaned_df)
                     cleaner.remove_duplicates()
@@ -107,6 +142,7 @@ with st.sidebar:
                     if st.button("Apply Missing Value Strategy"):
                         with st.spinner("Handling missing values..."):
                             try:
+                                save_to_history(f"Handle Missing Values ({strategy})")
                                 cleaner = DataCleaner(st.session_state.cleaned_df)
                                 strategy_map = {
                                     "Drop Rows": "drop", "Fill with Mean": "mean",
@@ -135,6 +171,7 @@ with st.sidebar:
                     if st.button("Cap Outliers"):
                         with st.spinner("Capping outliers..."):
                             try:
+                                save_to_history(f"Cap Outliers ({outlier_col})")
                                 cleaner = DataCleaner(st.session_state.cleaned_df)
                                 cleaner.handle_outliers(column=outlier_col, strategy='iqr')
                                 st.session_state.cleaned_df = cleaner.get_cleaned_data()
