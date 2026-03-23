@@ -27,7 +27,7 @@ class DataCleaner:
         if not isinstance(dataframe, pd.DataFrame):
             logger.error("DataCleaner initialization failed: input not a DataFrame")
             raise TypeError("Input must be a pandas DataFrame.")
-        self.df = dataframe.copy(deep=True)  # Work on a copy to avoid modifying original data
+        self.df = dataframe.copy(deep=True)
         logger.info("DataCleaner initialized with %d rows and %d columns", *self.df.shape)
 
     def get_summary(self) -> Dict[str, Any]:
@@ -50,10 +50,10 @@ class DataCleaner:
             description = pd.DataFrame()
 
         summary = {
-            "info": info_str,  # DataFrame structure and types
-            "description": description,  # Statistical summary
-            "missing_values": self.df.isnull().sum(),  # Count of missing values per column
-            "duplicate_count": int(self.df.duplicated().sum()),  # Number of duplicate rows
+            "info": info_str,
+            "description": description,
+            "missing_values": self.df.isnull().sum(),
+            "duplicate_count": int(self.df.duplicated().sum()),
         }
         return summary
 
