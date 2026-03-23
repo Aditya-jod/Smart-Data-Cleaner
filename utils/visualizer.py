@@ -13,9 +13,9 @@ if not logger.handlers:
 # Theme colors for all plots
 PRIMARY_COLOR = "#6c63ff"
 TEXT_COLOR = "#fafafa"
-BACKGROUND_COLOR = "none"  # Transparent background for plots
+BACKGROUND_COLOR = "none"
 
-sns.set_theme(style="darkgrid")  # base theme; style_plot will refine visuals
+sns.set_theme(style="darkgrid")
 
 
 def style_plot(fig: Figure, ax, title: str) -> None:
