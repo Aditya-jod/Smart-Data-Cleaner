@@ -87,7 +87,3 @@ pre-commit run --all-files
 - Open an issue or PR.
 - Run tests and linters locally before opening a PR.
 - Follow the code style (black/isort/flake8).
-
-## License
-
-MIT
