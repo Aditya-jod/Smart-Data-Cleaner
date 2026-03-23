@@ -201,15 +201,11 @@ class DataCleaner:
                 continue
             try:
                 if self.df[col].dtype == "object":
-                    # Try numeric conversion first (safe). Use errors='raise' and catch ValueError,
-                    # because errors='ignore' is deprecated and will raise in future pandas versions.
                     try:
                         converted = pd.to_numeric(self.df[col], errors="raise")
-                        # If conversion succeeds, assign converted series (preserves NaNs)
                         self.df[col] = converted
                         logger.debug("Column %s converted to numeric dtype", col)
                     except (ValueError, TypeError):
-                        # not fully numeric — leave as-is (convert_dtypes below may still improve)
                         logger.debug("Column %s could not be converted to numeric; leaving as object", col)
             except Exception as exc:
                 logger.exception("Failed converting column %s to numeric: %s", col, exc)
