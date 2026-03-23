@@ -34,21 +34,6 @@ Automates common data cleaning tasks so you can focus on analysis and modeling. 
   - CI workflow (GitHub Actions) to run tests and lint.
   - Pre-commit hooks (black/isort/flake8) recommended.
 
-## Folder structure
-
-```
-smart_data_cleaner/
-├── .streamlit/
-├── app.py
-├── utils/
-│   ├── data_cleaner.py
-│   └── visualizer.py
-├── requirements.txt
-├── requirements-dev.txt   # dev/test tools (recommended)
-├── tests/                 # suggested: pytest tests
-└── README.md
-```
-
 ## Install & run (local)
 
 1. Create and activate venv (Windows)
